@@ -1,0 +1,6 @@
+{
+  "name": "GlassMorph Engine",
+  "description": "Android source-to-source Glassmorphism and Liquid Glass theme engine transformer compiler tooling with AGSL shaders.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
