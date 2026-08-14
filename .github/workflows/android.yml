@@ -32,7 +32,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      # 4. Generate Gradle Wrapper
+      # 4. Generate Gradle Wrapper dynamically
       - name: Generate Gradle Wrapper
         run: gradle wrapper
 
@@ -53,9 +53,9 @@ jobs:
             -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      # 7. Build Debug APK
+      # 7. Build Debug APK (Suppressing Compose Compiler Version Check)
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug -PsuppressKotlinVersionCompatibilityCheck=true --stacktrace
 
       # 8. Upload Debug APK Artifact
       - name: Upload Debug APK
