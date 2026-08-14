@@ -53,9 +53,14 @@ jobs:
             -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      # 7. Build Debug APK (Suppressing Compose Compiler Version Check)
+      # 7. Build Debug APK with forced out-of-process execution for Kotlin/KSP
       - name: Build Debug APK
-        run: ./gradlew assembleDebug -PsuppressKotlinVersionCompatibilityCheck=true --stacktrace
+        run: |
+          ./gradlew assembleDebug \
+            -PsuppressKotlinVersionCompatibilityCheck=true \
+            -Dorg.gradle.jvmargs="-Xmx4g -Djava.awt.headless=true" \
+            -Dksp.incremental=false \
+            --stacktrace
 
       # 8. Upload Debug APK Artifact
       - name: Upload Debug APK
