@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout the repository source code
+      # 1. Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -28,19 +28,19 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. Setup Gradle environment
+      # 3. Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      # 4. Generate Gradle Wrapper dynamically
+      # 4. Generate Gradle Wrapper
       - name: Generate Gradle Wrapper
         run: gradle wrapper
 
-      # 5. Grant execute permission to wrapper
+      # 5. Grant execute permission
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
-      # 6. Generate missing debug.keystore expected by debugConfig
+      # 6. Generate Dummy Debug Keystore
       - name: Generate Dummy Debug Keystore
         run: |
           keytool -genkey -v \
@@ -53,16 +53,18 @@ jobs:
             -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      # 7. Build Debug APK with forced out-of-process execution for Kotlin/KSP
+      # 7. Build Debug APK with explicit environment flags
       - name: Build Debug APK
+        env:
+          JAVA_TOOL_OPTIONS: "-Djava.awt.headless=true"
         run: |
           ./gradlew assembleDebug \
-            -PsuppressKotlinVersionCompatibilityCheck=true \
-            -Dorg.gradle.jvmargs="-Xmx4g -Djava.awt.headless=true" \
+            -Djava.awt.headless=true \
             -Dksp.incremental=false \
+            -PsuppressKotlinVersionCompatibilityCheck=true \
             --stacktrace
 
-      # 8. Upload Debug APK Artifact
+      # 8. Upload Debug APK
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
