@@ -1,74 +1,55 @@
-name: Build GlassMorph Engine APK
+name: Run Frosted Glass Script & Build APK
 
 on:
-  push:
-    branches:
-      - main
-      - master
   pull_request:
-    branches:
-      - main
-      - master
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build Android APK
+  run-script-and-build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Set up JDK 17
+      - name: Make Script Executable & Run
+        run: |
+          chmod +x ./apply_frosted_glass.sh
+          ./apply_frosted_glass.sh
+
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
-          distribution: 'temurin'
+          distribution: 'zulu'
           java-version: '17'
+          cache: 'gradle'
 
-      # 3. Setup Gradle
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      # 4. Generate Gradle Wrapper
-      - name: Generate Gradle Wrapper
-        run: gradle wrapper
-
-      # 5. Grant execute permission
-      - name: Grant Execute Permission for Gradlew
-        run: chmod +x gradlew
-
-      # 6. Generate Dummy Debug Keystore
-      - name: Generate Dummy Debug Keystore
+      - name: Ensure Gradle Wrapper Exists
         run: |
-          keytool -genkey -v \
-            -keystore debug.keystore \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
+          if [ ! -f "gradlew" ]; then
+            sudo apt-get update && sudo apt-get install -y gradle
+            gradle wrapper
+          fi
+          chmod +x gradlew
 
-      # 7. Build Debug APK with explicit environment flags
+      - name: Create Dummy Debug Keystore
+        run: |
+          mkdir -p ~/.android
+          if [ ! -f ~/.android/debug.keystore ]; then
+            keytool -genkey -v -keystore ~/.android/debug.keystore \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+            echo "Dummy debug keystore created successfully."
+          fi
+
       - name: Build Debug APK
-        env:
-          JAVA_TOOL_OPTIONS: "-Djava.awt.headless=true"
-        run: |
-          ./gradlew assembleDebug \
-            -Djava.awt.headless=true \
-            -Dksp.incremental=false \
-            -PsuppressKotlinVersionCompatibilityCheck=true \
-            --stacktrace
+        run: ./gradlew assembleDebug --stacktrace
 
-      # 8. Upload Debug APK
-      - name: Upload Debug APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GlassMorphEngine-Debug-APK
+          name: Liquefyv2-Debug-APK
           path: app/build/outputs/apk/debug/*.apk
-          retention-days: 7
           
